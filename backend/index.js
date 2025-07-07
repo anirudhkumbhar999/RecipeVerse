@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 // MongoDB Atlas connection
@@ -25,6 +25,11 @@ const Recipe = mongoose.model('Recipe', new mongoose.Schema({
 app.get('/api/recipes', async (req, res) => {
     const recipes = await Recipe.find();
     res.json(recipes);
+});
+
+// Root route for server status
+app.get('/', (req, res) => {
+    res.send('Server is running! Visit /api/recipes for the API.');
 });
 
 const PORT = process.env.PORT || 3000;
