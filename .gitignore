@@ -1,0 +1,41 @@
+# Node
+node_modules/
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+
+# Expo/React Native
+.expo/
+.expo-shared/
+*.expo/
+*.expo-shared/
+*.log
+
+# Metro/React Native
+*.packager*
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Misc
+*.local
+.idea/
+
+# Ignore coverage
+coverage/
+
+# Ignore Expo web build
+web-build/ 
