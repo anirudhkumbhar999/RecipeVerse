@@ -4,9 +4,20 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
+// Check if required environment variables are set
+const checkEnvVars = () => {
+    if (!process.env.MONGODB_URI) {
+        throw new Error('MONGODB_URI environment variable is not set');
+    }
+    if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET environment variable is not set');
+    }
+};
+
 // Signup
 router.post('/signup', async (req, res) => {
     try {
+        checkEnvVars();
         console.log('Signup request received:', { email: req.body.email, username: req.body.username });
         const { username, email, password } = req.body;
 
@@ -29,7 +40,9 @@ router.post('/signup', async (req, res) => {
         res.status(201).json({ token, user: { username: user.username, email: user.email } });
     } catch (err) {
         console.error('Signup error:', err);
-        if (err.name === 'MongoServerSelectionError' || err.message.includes('buffering')) {
+        if (err.message.includes('environment variable')) {
+            res.status(500).json({ error: 'Server configuration error' });
+        } else if (err.name === 'MongoServerSelectionError' || err.message.includes('buffering')) {
             res.status(503).json({ error: 'Database connection failed. Please try again.' });
         } else if (err.code === 11000) {
             res.status(400).json({ error: 'User already exists' });
@@ -42,6 +55,7 @@ router.post('/signup', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
     try {
+        checkEnvVars();
         console.log('Login request received:', { email: req.body.email });
         const { email, password } = req.body;
 
@@ -66,7 +80,9 @@ router.post('/login', async (req, res) => {
         res.json({ token, user: { username: user.username, email: user.email } });
     } catch (err) {
         console.error('Login error:', err);
-        if (err.name === 'MongoServerSelectionError' || err.message.includes('buffering')) {
+        if (err.message.includes('environment variable')) {
+            res.status(500).json({ error: 'Server configuration error' });
+        } else if (err.name === 'MongoServerSelectionError' || err.message.includes('buffering')) {
             res.status(503).json({ error: 'Database connection failed. Please try again.' });
         } else {
             res.status(500).json({ error: 'Server error. Please try again.' });
