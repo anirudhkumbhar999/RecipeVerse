@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const commentSchema = new mongoose.Schema({
     author: { type: String, required: true },
@@ -18,6 +18,10 @@ const recipeSchema = new mongoose.Schema({
     comments: [commentSchema],
     likes: [{ type: String }], // user ids
     bookmarks: [{ type: String }], // user ids
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Recipe', recipeSchema); 
+export default mongoose.model('Recipe', recipeSchema); 
