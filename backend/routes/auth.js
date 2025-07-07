@@ -14,6 +14,12 @@ router.post('/signup', async (req, res) => {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
+        // Check if user already exists
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            return res.status(400).json({ error: 'User already exists with this email or username' });
+        }
+
         const user = new User({ username, email, password });
         await user.save();
         console.log('User created successfully:', user._id);
@@ -23,10 +29,12 @@ router.post('/signup', async (req, res) => {
         res.status(201).json({ token, user: { username: user.username, email: user.email } });
     } catch (err) {
         console.error('Signup error:', err);
-        if (err.code === 11000) {
+        if (err.name === 'MongoServerSelectionError' || err.message.includes('buffering')) {
+            res.status(503).json({ error: 'Database connection failed. Please try again.' });
+        } else if (err.code === 11000) {
             res.status(400).json({ error: 'User already exists' });
         } else {
-            res.status(500).json({ error: err.message });
+            res.status(500).json({ error: 'Server error. Please try again.' });
         }
     }
 });
@@ -58,7 +66,11 @@ router.post('/login', async (req, res) => {
         res.json({ token, user: { username: user.username, email: user.email } });
     } catch (err) {
         console.error('Login error:', err);
-        res.status(500).json({ error: 'Server error' });
+        if (err.name === 'MongoServerSelectionError' || err.message.includes('buffering')) {
+            res.status(503).json({ error: 'Database connection failed. Please try again.' });
+        } else {
+            res.status(500).json({ error: 'Server error. Please try again.' });
+        }
     }
 });
 
