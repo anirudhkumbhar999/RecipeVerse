@@ -20,25 +20,27 @@ mongoose.connect(process.env.MONGODB_URI, {
     .then(() => console.log('✅ MongoDB connected'))
     .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// Sample Recipe model
-const Recipe = mongoose.model('Recipe', new mongoose.Schema({
-    title: String,
-    description: String,
-}));
-
-// Sample route
-app.get('/api/recipes', async (req, res) => {
-    const recipes = await Recipe.find();
-    res.json(recipes);
-});
-
 // Root route for server status
 app.get('/', (req, res) => {
     res.send('Server is running! Visit /api/recipes for the API.');
 });
 
+// API routes
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/auth', authRoutes);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`)); 
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+export default app; 

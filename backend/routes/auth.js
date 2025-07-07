@@ -7,28 +7,57 @@ const router = express.Router();
 // Signup
 router.post('/signup', async (req, res) => {
     try {
+        console.log('Signup request received:', { email: req.body.email, username: req.body.username });
         const { username, email, password } = req.body;
+
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
         const user = new User({ username, email, password });
         await user.save();
+        console.log('User created successfully:', user._id);
+
         // Immediately log in after signup
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
         res.status(201).json({ token, user: { username: user.username, email: user.email } });
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error('Signup error:', err);
+        if (err.code === 11000) {
+            res.status(400).json({ error: 'User already exists' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
     }
 });
 
 // Login
 router.post('/login', async (req, res) => {
     try {
+        console.log('Login request received:', { email: req.body.email });
         const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+        if (!user) {
+            console.log('User not found:', email);
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+
         const isMatch = await user.comparePassword(password);
-        if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
+        if (!isMatch) {
+            console.log('Password mismatch for user:', email);
+            return res.status(400).json({ error: 'Invalid credentials' });
+        }
+
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        console.log('Login successful for user:', email);
         res.json({ token, user: { username: user.username, email: user.email } });
     } catch (err) {
+        console.error('Login error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
